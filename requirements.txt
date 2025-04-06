@@ -1,0 +1,13 @@
+flask==2.3.3
+flask-cors==4.0.0
+openai==1.14.3
+sentence-transformers==2.2.2
+transformers==4.35.2
+torch==2.1.0
+faiss-cpu==1.7.4
+numpy==1.26.4
+PyMuPDF==1.23.7
+pytesseract==0.3.10
+Pillow==10.3.0
+PyPDF2==3.0.1
+pdf2image==1.17.0
