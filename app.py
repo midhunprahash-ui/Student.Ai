@@ -8,8 +8,7 @@ from txtgen import (
     query_openai,
     perform_ocr,
     tag_important_points,
-    generate_quiz_questions,
-    generate_explanations_from_pdf
+    generate_quiz_questions
 )
 
 app = Flask(__name__)
@@ -64,25 +63,29 @@ def analyze():
     if not full_text:
         return jsonify({'error': 'File not found'}), 404
 
-    explanation = generate_explanations_from_pdf(full_text, topic, page)
-    if not explanation or explanation['what'].startswith('No topics found'):
+    context = get_context_for_keyword(full_text, topic, page)
+    if not context:
         return jsonify({
-            'what': explanation['what'],
+            'what': 'No topics found on the specified page.',
             'why': '',
             'how': '',
             'summary': '',
             'external': f'https://en.wikipedia.org/wiki/{topic.replace(" ", "_")}'
         })
 
-    return jsonify(explanation)
+    what = query_openai(f"What is '{topic}'?\nContext:\n{context}")
+    why = query_openai(f"Why is '{topic}' important?\nContext:\n{context}")
+    how = query_openai(f"How does '{topic}' work?\nContext:\n{context}")
+    summary = query_openai(f"Summarize the topic '{topic}' briefly.\nContext:\n{context}")
+
+    return jsonify({'what': what, 'why': why, 'how': how, 'summary': summary})
 
 @app.route('/important-points', methods=['POST'])
 def important_points():
     data = request.form
     filename = data.get('filename')
     page = data.get('page')
-    topic = data.get('topic')
-    if not filename or not page or not topic:
+    if not filename or not page:
         return jsonify({'error': 'Missing fields'}), 400
 
     try:
@@ -95,7 +98,7 @@ def important_points():
         return jsonify({'error': 'File not found'}), 404
 
     page_text = full_text.get(page, "")
-    points = tag_important_points(page_text, topic)
+    points = tag_important_points(page_text)
     return jsonify({'points': points})
 
 @app.route('/generate-quiz', methods=['POST'])
@@ -103,8 +106,7 @@ def generate_quiz():
     data = request.form
     filename = data.get('filename')
     page = data.get('page')
-    topic = data.get('topic')
-    if not filename or not page or not topic:
+    if not filename or not page:
         return jsonify({'error': 'Missing fields'}), 400
 
     try:
@@ -117,7 +119,7 @@ def generate_quiz():
         return jsonify({'error': 'File not found'}), 404
 
     page_text = full_text.get(page, "")
-    quiz = generate_quiz_questions(page_text, topic)
+    quiz = generate_quiz_questions(page_text)
     return jsonify({'quiz': quiz})
 
 if __name__ == '__main__':

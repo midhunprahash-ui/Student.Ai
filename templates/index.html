@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student.Ai</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📘 Student.Ai</h1>
+        <form id="uploadForm">
+            <input type="file" name="pdf" id="pdf" required>
+            <button type="submit">Upload</button>
+        </form>
+
+        <div id="fileInfo" style="display:none;">
+            <h3>Analyze Topic</h3>
+            <input type="text" id="topic" placeholder="Enter topic or keyword">
+            <input type="number" id="page" placeholder="Page number">
+            <button onclick="analyze()">What / Why / How / Summary</button>
+            <button onclick="importantPoints()">Important Points</button>
+            <button onclick="generateQuiz()">Generate Quiz</button>
+        </div>
+
+        <div id="results" class="result-box" style="display:none;">
+            <h3>Results:</h3>
+            <div id="output"></div>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>

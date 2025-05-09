@@ -62,32 +62,10 @@ def query_openai(prompt):
     )
     return response.choices[0].message.content.strip()
 
-def generate_explanations_from_pdf(text_by_page, keyword, page):
-    context = get_context_for_keyword(text_by_page, keyword, page)
-    if not context:
-        return {
-            "what": "No relevant content found for this topic on the selected page.",
-            "why": "",
-            "how": "",
-            "summary": ""
-        }
-
-    what = query_openai(f"What is '{keyword}' in the following context?\n\n{context}")
-    why = query_openai(f"Why is '{keyword}' important in this context?\n\n{context}")
-    how = query_openai(f"How does '{keyword}' work or apply in the following content?\n\n{context}")
-    summary = query_openai(f"Give a brief summary of '{keyword}' based on the following:\n\n{context}")
-
-    return {
-        "what": what,
-        "why": why,
-        "how": how,
-        "summary": summary
-    }
-
-def tag_important_points(text, keyword):
-    prompt = f"From this text, list the 5 most important points related to '{keyword}':\n{text}"
+def tag_important_points(text):
+    prompt = f"List the 5 most important points in bullet format from this text:\n{text}"
     return query_openai(prompt)
 
-def generate_quiz_questions(text, keyword):
-    prompt = f"Generate 5 multiple-choice quiz questions focused on the topic '{keyword}' from the following text:\n{text}"
+def generate_quiz_questions(text):
+    prompt = f"Generate 5 multiple-choice quiz questions from the following text:\n{text}"
     return query_openai(prompt)
