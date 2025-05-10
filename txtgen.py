@@ -53,7 +53,7 @@ def get_context_for_keyword(text_by_page, keyword, page):
 
 def query_openai(prompt):
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gemini-2.0-flash",
         messages=[
             {"role": "system", "content": "You are a helpful assistant for students studying from PDF textbooks."},
             {"role": "user", "content": prompt}
