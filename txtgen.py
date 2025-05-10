@@ -1,58 +1,71 @@
-import PyPDF2
+import fitz
 import pytesseract
 from PIL import Image
-import pdf2image
+import io
 import openai
-import os
+from sentence_transformers import SentenceTransformer
+import faiss
+import numpy as np
+import PyPDF2
+from pdf2image import convert_from_path
+from openai_client import client
+
+model = SentenceTransformer("all-MiniLM-L6-v2")
 
 def extract_text_all_pages(pdf_path):
     text_by_page = {}
     try:
-        with open(pdf_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
-            for page_num in range(len(pdf_reader.pages)):
-                text = pdf_reader.pages[page_num].extract_text()
-                text_by_page[page_num + 1] = text
-    except Exception as e:
-        print(f"Error extracting text: {e}")
-        text_by_page[1] = ""
+        with open(pdf_path, "rb") as f:
+            reader = PyPDF2.PdfReader(f)
+            for i, page in enumerate(reader.pages):
+                text = page.extract_text()
+                text_by_page[i + 1] = text or ""
+    except Exception:
+        return perform_ocr(pdf_path)
     return text_by_page
 
 def perform_ocr(pdf_path):
-    text_by_page = {}
-    try:
-        images = pdf2image.convert_from_path(pdf_path)
-        for i, image in enumerate(images):
-            text = pytesseract.image_to_string(image)
-            text_by_page[i + 1] = text
-    except Exception as e:
-        print(f"Error performing OCR: {e}")
-        text_by_page[1] = ""
-    return text_by_page
+    images = convert_from_path(pdf_path)
+    ocr_text_by_page = {}
+    for i, img in enumerate(images):
+        text = pytesseract.image_to_string(img)
+        ocr_text_by_page[i + 1] = text
+    return ocr_text_by_page
 
-def get_context_for_keyword(full_text, keyword, page):
-    if page not in full_text:
+def get_context_for_keyword(text_by_page, keyword, page):
+    page_text = text_by_page.get(page, "")
+    if not page_text:
         return None
-    text = full_text[page]
-    if keyword.lower() not in text.lower():
+
+    chunks = [page_text[i:i+300] for i in range(0, len(page_text), 300)]
+    if not chunks:
         return None
-    return text
+
+    embeddings = model.encode(chunks)
+    index = faiss.IndexFlatL2(embeddings.shape[1])
+    index.add(np.array(embeddings))
+
+    keyword_embedding = model.encode([keyword])
+    D, I = index.search(np.array(keyword_embedding), k=3)
+
+    relevant_chunks = [chunks[i] for i in I[0] if i < len(chunks)]
+    return "\n".join(relevant_chunks)
 
 def query_openai(prompt):
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.choices[0].message.content
-    except Exception as e:
-        return f"Error generating response: {str(e)}"
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant for students studying from PDF textbooks."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.4,
+    )
+    return response.choices[0].message.content.strip()
 
 def tag_important_points(text):
-    prompt = f"Extract important points from this text as a list:\n{text}"
-    response = query_openai(prompt)
-    return response.split('\n')
+    prompt = f"List the 5 most important points in bullet format from this text:\n{text}"
+    return query_openai(prompt)
 
 def generate_quiz_questions(text):
-    prompt = f"Generate 5 multiple choice questions with answers based on this text:\n{text}"
+    prompt = f"Generate 5 multiple-choice quiz questions from the following text:\n{text}"
     return query_openai(prompt)
