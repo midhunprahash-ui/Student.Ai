@@ -41,8 +41,8 @@ class SmartTutor:
         self.embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         self.db = self._load_vector_db()
         self.retriever = self.db.as_retriever(search_kwargs={"k": 5})
-        self.tutor_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.7)
-        self.analyzer_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash-latest", temperature=0.0)
+        self.tutor_llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.7)
+        self.analyzer_llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0.0)
         
         self._initialize_chains()
         
