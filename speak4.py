@@ -21,7 +21,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain.schema.output_parser import StrOutputParser
 
-os.environ["GOOGLE_API_KEY"] = "AIzaSyAfWAbomb90QjRCWyvlw_OIxtEbvpIpTw8"
+os.environ["GOOGLE_API_KEY"] = "YOUR_GOOGLE_API_KEY_HERE"
 
 class SmartTutor:
     def __init__(self):
