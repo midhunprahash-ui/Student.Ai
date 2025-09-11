@@ -19,7 +19,7 @@ from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema.output_parser import StrOutputParser
 
 # Set up API key
-os.environ["GOOGLE_API_KEY"] = "AIzaSyAfWAbomb90QjRCWyvlw_OIxtEbvpIpTw8"
+os.environ["GOOGLE_API_KEY"] = "YOUR_GOOGLE_API_KEY_HERE"
 
 class SmartTutoringSystem:
     def __init__(self):
